@@ -1,30 +1,32 @@
 const { Model, DataTypes } = require("sequelize");
 
-class Acesso extends Model {
+class Cliente extends Model {
   static init(sequelize) {
     super.init(
       {
-        id_acesso: {
+        id_cliente: {
           type: DataTypes.INTEGER,
           primaryKey: true,
           autoIncrement: true,
         },
-        usuario: DataTypes.STRING,
-        senha: DataTypes.STRING,
+        nome: DataTypes.STRING,
+        rg: DataTypes.INTEGER,
+        cpf: DataTypes.INTEGER,
+        endereco: DataTypes.STRING,
         data_criacao: DataTypes.DATE,
         data_alteracao: DataTypes.DATE,
       },
       {
         sequelize,
-        tableName: "acesso",
+        tableName: "cliente",
       }
     );
   }
 
   static associate(models) {
     this.hasOne(models.Perfil, { foreignKey: "id_perfil", as: "perfil" });
-    this.hasOne(models.Cliente, { foreignKey: "id_acesso", as: "cliente" });
+    this.hasOne(models.Acesso, { foreignKey: "id_acesso", as: "acesso" });
   }
 }
 
-module.exports = Acesso;
+module.exports = Cliente;

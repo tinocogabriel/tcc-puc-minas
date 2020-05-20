@@ -19,8 +19,10 @@ class Perfil extends Model {
       }
     );
   }
+
   static associate(models) {
     this.hasMany(models.Acesso, { foreignKey: "id_perfil", as: "acesso" });
+    this.hasOne(models.Cliente, { foreignKey: "id_perfil", as: "cliente" });
   }
 }
 
