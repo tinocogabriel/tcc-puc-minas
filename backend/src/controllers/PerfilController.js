@@ -21,6 +21,10 @@ module.exports = {
     const { id_perfil } = req.params;
     const { descricao } = req.body;
 
+    const obj = await Perfil.findByPk(id_perfil);
+    if(!obj)
+      return res.status(404).json({error: 'Perfil não encontrado!'});
+
     const perfil = await Perfil.update(
       {
         descricao,
@@ -46,7 +50,7 @@ module.exports = {
     if(!obj)
       return res.status(404).json({error: 'Perfil não encontrado!'});
 
-    const perfil = await Perfil.destroy({ where: { id_perfil } });
+    await Perfil.destroy({ where: { id_perfil } });
     return res.status(204).json();
   },
 };

@@ -25,7 +25,12 @@ class Instrutor extends Model {
   static associate(models) {
     this.belongsTo(models.Perfil, { foreignKey: "id_perfil", as: "perfil" });
     this.belongsTo(models.Acesso, { foreignKey: "id_acesso", as: "acesso" });
-    this.belongsToMany(models.Atividade, { foreignKey: "id_instrutor",through: "instrutor_atividades", as: "atividade" });
+    this.belongsToMany(models.Atividade, {
+      foreignKey: "id_instrutor",
+      through: "instrutor_atividades",
+      as: "atividade",
+    });
+    this.hasMany(models.Aula, { foreignKey: "id_instrutor", as: "aula" });
   }
 }
 

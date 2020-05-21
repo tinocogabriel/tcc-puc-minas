@@ -20,7 +20,7 @@ module.exports = {
 
     if (usuarioDuplicado)
       return res.status(404).json({
-        error: "Já existe um registro com esse usuário para o mesmo perfil!",
+        error: "Usuário de acesso já existe!",
       });
 
     const clienteDuplicado = await Cliente.findOne({
@@ -32,7 +32,7 @@ module.exports = {
 
     if (clienteDuplicado)
       return res.status(404).json({
-        error: "Já existe um cliente cadastrado com esse CPF!",
+        error: "Existe um cliente cadastrado com esse CPF!",
       });
 
     const acesso = await Acesso.create({
@@ -101,21 +101,25 @@ module.exports = {
   },
   async update(req, res) {
     const { nome, rg, cpf, endereco, id_perfil, usuario, senha } = req.body;
-    const { id_cliente, id_acesso } = req.params;
+    const { id_cliente } = req.params;
+
+    const cliente = await Cliente.findByPk(id_cliente);
+    if (!cliente)
+      return res.status(404).json({ error: "Cliente não encontrado!" });
 
     const usuarioDuplicado = await Acesso.findOne({
       where: {
         usuario,
         id_perfil,
         id_acesso: {
-          [Op.ne]: id_acesso,
+          [Op.ne]: cliente.id_acesso,
         },
       },
     });
 
     if (usuarioDuplicado)
       return res.status(404).json({
-        error: "Já existe um registro com esse usuário para o mesmo perfil!",
+        error: "Usuário de acesso já existe!",
       });
 
     const clienteDuplicado = await Cliente.findOne({
@@ -130,7 +134,7 @@ module.exports = {
 
     if (clienteDuplicado)
       return res.status(404).json({
-        error: "Já existe um cliente cadastrado com esse CPF!",
+        error: "Existe um cliente cadastrado com esse CPF!",
       });
 
     const acesso = await Acesso.update(
@@ -141,7 +145,7 @@ module.exports = {
       },
       {
         where: {
-          id_acesso,
+          id_acesso: cliente.id_acesso,
         },
       }
     );
@@ -151,7 +155,7 @@ module.exports = {
         error: "Ocorreu um problema na atualização dos dados de acesso!",
       });
 
-    const cliente = await Cliente.update(
+    const clienteUpdate = await Cliente.update(
       {
         nome,
         rg,
@@ -167,18 +171,22 @@ module.exports = {
     );
 
     return res.json({
-      retorno: cliente,
+      retorno: clienteUpdate,
       mensagem:
-        cliente == 1
+      clienteUpdate == 1
           ? "Atualizado com sucesso!"
           : "Houve um problema na atualização",
     });
   },
   async delete(req, res) {
-    const { id_cliente, id_acesso } = req.params;
+    const { id_cliente } = req.params;
 
-    const cliente = await Cliente.destroy({ where: { id_cliente } });
-    const acesso = await Acesso.destroy({ where: { id_acesso } });
+    const cliente = await Cliente.findByPk(id_cliente);
+    if (!cliente)
+      return res.status(404).json({ error: "Cliente não encontrado!" });
+
+    await Cliente.destroy({ where: { id_cliente } });
+    await Acesso.destroy({ where: { id_acesso: cliente.id_acesso } });
 
     return res.status(204).json();
   },

@@ -21,7 +21,7 @@ module.exports = {
 
     if (usuarioDuplicado)
       return res.status(404).json({
-        error: "Já existe um registro com esse usuário para o mesmo perfil!",
+        error: "Usuário de acesso já existe!",
       });
 
     const instrutorDuplicado = await Instrutor.findOne({
@@ -33,7 +33,7 @@ module.exports = {
 
     if (instrutorDuplicado)
       return res.status(404).json({
-        error: "Já existe um instrutor cadastrado com esse CPF!",
+        error: "Existe um instrutor cadastrado com esse CPF!",
       });
 
     const acesso = await Acesso.create({
@@ -66,9 +66,7 @@ module.exports = {
         },
       });
 
-      if (atividade) {
-        await instrutor.addAtividade(atividade);
-      }
+      if (atividade) await instrutor.addAtividade(atividade);
     }
 
     return res.json({ instrutor });
@@ -90,7 +88,7 @@ module.exports = {
           {
             association: "atividade",
             attributes: ["id_atividade", "descricao"],
-            throught: {
+            through: {
               attributes: [],
             },
           },
@@ -115,7 +113,7 @@ module.exports = {
           {
             association: "atividade",
             attributes: ["id_atividade", "descricao"],
-            throught: {
+            through: {
               attributes: [],
             },
           },
@@ -127,21 +125,25 @@ module.exports = {
   },
   async update(req, res) {
     const { nome, rg, cpf, id_perfil, usuario, senha, atividades } = req.body;
-    const { id_instrutor, id_acesso } = req.params;
+    const { id_instrutor } = req.params;
+
+    const instrutor = await Instrutor.findByPk(id_instrutor);
+    if (!instrutor)
+      return res.status(404).json({ error: "Instrutor não encontrado!" });
 
     const usuarioDuplicado = await Acesso.findOne({
       where: {
         usuario,
         id_perfil,
         id_acesso: {
-          [Op.ne]: id_acesso,
+          [Op.ne]: instrutor.id_acesso,
         },
       },
     });
 
     if (usuarioDuplicado)
       return res.status(404).json({
-        error: "Já existe um registro com esse usuário para o mesmo perfil!",
+        error: "Usuário de acesso já existe!",
       });
 
     const instrutorDuplicado = await Instrutor.findOne({
@@ -156,7 +158,7 @@ module.exports = {
 
     if (instrutorDuplicado)
       return res.status(404).json({
-        error: "Já existe um instrutor cadastrado com esse CPF!",
+        error: "Existe um instrutor cadastrado com esse CPF!",
       });
 
     const acesso = await Acesso.update(
@@ -167,7 +169,7 @@ module.exports = {
       },
       {
         where: {
-          id_acesso,
+          id_acesso: instrutor.id_acesso,
         },
       }
     );
@@ -177,7 +179,7 @@ module.exports = {
         error: "Ocorreu um problema na atualização dos dados de acesso!",
       });
 
-    const instrutor = await Instrutor.update(
+    const instrutorUpdate = await Instrutor.update(
       {
         nome,
         rg,
@@ -191,9 +193,7 @@ module.exports = {
       }
     );
 
-    const instrutorAtividade = await Instrutor.findOne({where:{id_instrutor}});
-
-    await instrutorAtividade.setAtividade([]);
+    await instrutor.setAtividade([]);
 
     for (let i = 0, max = atividades.length; i < max; i++) {
       const atividade = await Atividade.findOne({
@@ -202,24 +202,26 @@ module.exports = {
         },
       });
 
-      if (atividade) {
-        await instrutorAtividade.addAtividade(atividade);
-      }
+      if (atividade) await instrutor.addAtividade(atividade);
     }
 
     return res.json({
-      retorno: instrutor,
+      retorno: instrutorUpdate,
       mensagem:
-        instrutor == 1
+      instrutorUpdate == 1
           ? "Atualizado com sucesso!"
           : "Houve um problema na atualização",
     });
   },
   async delete(req, res) {
-    const { id_instrutor, id_acesso } = req.params;
+    const { id_instrutor } = req.params;
 
-    const instrutor = await Instrutor.destroy({ where: { id_instrutor } });
-    const acesso = await Acesso.destroy({ where: { id_acesso } });
+    const instrutor = await Instrutor.findByPk(id_instrutor);
+    if (!instrutor)
+      return res.status(404).json({ error: "Instrutor não encontrado!" });
+
+    await Instrutor.destroy({ where: { id_instrutor } });
+    await Acesso.destroy({ where: { id_acesso: instrutor.id_acesso } });
 
     return res.status(204).json();
   },

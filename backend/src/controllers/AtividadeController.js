@@ -13,16 +13,14 @@ module.exports = {
 
     if (atividadeDuplicada)
       return res.status(404).json({
-        error: "Já existe uma atividade com essa descrição!",
+        error: "Existe uma atividade com essa descrição!",
       });
 
-    const [atividade] = await Atividade.findOrCreate(
-      {
-        descricao,
-        data_criacao: new Date(),
-        data_alteracao: new Date(),
-      },
-    );
+    const atividade = await Atividade.create({
+      descricao,
+      data_criacao: new Date(),
+      data_alteracao: new Date(),
+    });
 
     return res.json(atividade);
   },
@@ -35,6 +33,10 @@ module.exports = {
     const { descricao } = req.body;
     const { id_atividade } = req.params;
 
+    const obj = await Atividade.findByPk(id_atividade);
+    if (!obj)
+      return res.status(404).json({ error: "Atividade não encontrada!" });
+
     const atividadeDuplicada = await Atividade.findOne({
       where: {
         descricao,
@@ -46,13 +48,13 @@ module.exports = {
 
     if (atividadeDuplicada)
       return res.status(404).json({
-        error: "Já existe uma atividade com essa descrição!",
+        error: "Existe uma atividade com essa descrição!",
       });
 
     const atividade = await Atividade.update(
       {
         descricao,
-        data_alteracao: new Date()
+        data_alteracao: new Date(),
       },
       {
         where: {
@@ -72,7 +74,11 @@ module.exports = {
   async delete(req, res) {
     const { id_atividade } = req.params;
 
-    const atividade = await Atividade.destroy({ where: { id_atividade } });
+    const obj = await Atividade.findByPk(id_atividade);
+    if (!obj)
+      return res.status(404).json({ error: "Atividade não encontrada!" });
+
+    await Atividade.destroy({ where: { id_atividade } });
 
     return res.status(204).json();
   },
