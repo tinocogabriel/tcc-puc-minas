@@ -1,10 +1,10 @@
 const { Model, DataTypes } = require("sequelize");
 
-class Perfil extends Model {
+class Atividade extends Model {
   static init(sequelize) {
     super.init(
       {
-        id_perfil: {
+        id_atividade: {
           type: DataTypes.INTEGER,
           primaryKey: true,
           autoIncrement: true,
@@ -15,16 +15,14 @@ class Perfil extends Model {
       },
       {
         sequelize,
-        tableName: "perfil",
+        tableName: "atividade",
       }
     );
   }
 
   static associate(models) {
-    this.hasMany(models.Acesso, { foreignKey: "id_perfil", as: "acesso" });
-    this.hasMany(models.Cliente, { foreignKey: "id_perfil", as: "cliente" });
-    this.hasMany(models.Instrutor, { foreignKey: "id_perfil", as: "instrutor" });
+    this.belongsToMany(models.Instrutor, { foreignKey: "id_atividade",through: "instrutor_atividades", as: "instrutor" });
   }
 }
 
-module.exports = Perfil;
+module.exports = Atividade;

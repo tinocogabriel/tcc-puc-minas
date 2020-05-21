@@ -1,11 +1,12 @@
 const { Op } = require("sequelize");
-const Cliente = require("../models/Cliente");
+const Instrutor = require("../models/Instrutor");
 const Perfil = require("../models/Perfil");
 const Acesso = require("../models/Acesso");
+const Atividade = require("../models/Atividade");
 
 module.exports = {
   async store(req, res) {
-    const { nome, rg, cpf, endereco, id_perfil, usuario, senha } = req.body;
+    const { nome, rg, cpf, id_perfil, usuario, senha, atividades } = req.body;
 
     const perfil = await Perfil.findByPk(id_perfil);
     if (!perfil)
@@ -23,16 +24,16 @@ module.exports = {
         error: "Já existe um registro com esse usuário para o mesmo perfil!",
       });
 
-    const clienteDuplicado = await Cliente.findOne({
+    const instrutorDuplicado = await Instrutor.findOne({
       where: {
         cpf,
         id_perfil,
       },
     });
 
-    if (clienteDuplicado)
+    if (instrutorDuplicado)
       return res.status(404).json({
-        error: "Já existe um cliente cadastrado com esse CPF!",
+        error: "Já existe um instrutor cadastrado com esse CPF!",
       });
 
     const acesso = await Acesso.create({
@@ -48,24 +49,35 @@ module.exports = {
         error: "Ocorreu um problema na criação do acesso!",
       });
 
-    const cliente = await Cliente.create({
+    const instrutor = await Instrutor.create({
       id_acesso: acesso.id_acesso,
       nome,
       rg,
       cpf,
-      endereco,
       id_perfil,
       data_criacao: new Date(),
       data_alteracao: new Date(),
     });
 
-    return res.json({ cliente });
+    for (let i = 0, max = atividades.length; i < max; i++) {
+      const atividade = await Atividade.findOne({
+        where: {
+          id_atividade: atividades[i],
+        },
+      });
+
+      if (atividade) {
+        await instrutor.addAtividade(atividade);
+      }
+    }
+
+    return res.json({ instrutor });
   },
   async index(req, res) {
     const { indicador, valor } = req.params;
 
     if (indicador && valor) {
-      const cliente = await Cliente.findAll({
+      const instrutor = await Instrutor.findAll({
         include: [
           {
             association: "acesso",
@@ -74,6 +86,13 @@ module.exports = {
           {
             association: "perfil",
             attributes: ["descricao"],
+          },
+          {
+            association: "atividade",
+            attributes: ["id_atividade", "descricao"],
+            throught: {
+              attributes: [],
+            },
           },
         ],
         where: {
@@ -81,9 +100,9 @@ module.exports = {
         },
       });
 
-      return res.json(cliente);
+      return res.json(instrutor);
     } else {
-      const cliente = await Cliente.findAll({
+      const instrutor = await Instrutor.findAll({
         include: [
           {
             association: "acesso",
@@ -93,15 +112,22 @@ module.exports = {
             association: "perfil",
             attributes: ["descricao"],
           },
+          {
+            association: "atividade",
+            attributes: ["id_atividade", "descricao"],
+            throught: {
+              attributes: [],
+            },
+          },
         ],
       });
 
-      return res.json(cliente);
+      return res.json(instrutor);
     }
   },
   async update(req, res) {
-    const { nome, rg, cpf, endereco, id_perfil, usuario, senha } = req.body;
-    const { id_cliente, id_acesso } = req.params;
+    const { nome, rg, cpf, id_perfil, usuario, senha, atividades } = req.body;
+    const { id_instrutor, id_acesso } = req.params;
 
     const usuarioDuplicado = await Acesso.findOne({
       where: {
@@ -118,19 +144,19 @@ module.exports = {
         error: "Já existe um registro com esse usuário para o mesmo perfil!",
       });
 
-    const clienteDuplicado = await Cliente.findOne({
+    const instrutorDuplicado = await Instrutor.findOne({
       where: {
         cpf,
         id_perfil,
-        id_cliente: {
-          [Op.ne]: id_cliente,
+        id_instrutor: {
+          [Op.ne]: id_instrutor,
         },
       },
     });
 
-    if (clienteDuplicado)
+    if (instrutorDuplicado)
       return res.status(404).json({
-        error: "Já existe um cliente cadastrado com esse CPF!",
+        error: "Já existe um instrutor cadastrado com esse CPF!",
       });
 
     const acesso = await Acesso.update(
@@ -151,33 +177,48 @@ module.exports = {
         error: "Ocorreu um problema na atualização dos dados de acesso!",
       });
 
-    const cliente = await Cliente.update(
+    const instrutor = await Instrutor.update(
       {
         nome,
         rg,
         cpf,
-        endereco,
         data_alteracao: new Date(),
       },
       {
         where: {
-          id_cliente,
+          id_instrutor,
         },
       }
     );
 
+    const instrutorAtividade = await Instrutor.findOne({where:{id_instrutor}});
+
+    await instrutorAtividade.setAtividade([]);
+
+    for (let i = 0, max = atividades.length; i < max; i++) {
+      const atividade = await Atividade.findOne({
+        where: {
+          id_atividade: atividades[i],
+        },
+      });
+
+      if (atividade) {
+        await instrutorAtividade.addAtividade(atividade);
+      }
+    }
+
     return res.json({
-      retorno: cliente,
+      retorno: instrutor,
       mensagem:
-        cliente == 1
+        instrutor == 1
           ? "Atualizado com sucesso!"
           : "Houve um problema na atualização",
     });
   },
   async delete(req, res) {
-    const { id_cliente, id_acesso } = req.params;
+    const { id_instrutor, id_acesso } = req.params;
 
-    const cliente = await Cliente.destroy({ where: { id_cliente } });
+    const instrutor = await Instrutor.destroy({ where: { id_instrutor } });
     const acesso = await Acesso.destroy({ where: { id_acesso } });
 
     return res.status(204).json();

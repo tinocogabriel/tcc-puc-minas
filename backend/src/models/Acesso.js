@@ -22,8 +22,9 @@ class Acesso extends Model {
   }
 
   static associate(models) {
-    this.hasOne(models.Perfil, { foreignKey: "id_perfil", as: "perfil" });
+    this.belongsTo(models.Perfil, { foreignKey: "id_perfil", as: "perfil" });
     this.hasOne(models.Cliente, { foreignKey: "id_acesso", as: "cliente" });
+    this.hasOne(models.Instrutor, { foreignKey: "id_acesso", as: "instrutor" });
   }
 }
 
