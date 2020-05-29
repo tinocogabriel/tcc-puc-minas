@@ -1,0 +1,20 @@
+.aula-container .box {
+    padding: 12px;
+  }
+  .aula-container .box .searchAreaTitle {
+    text-align: center;
+    font-weight: 400;
+  }
+  .aula-container .box .searchArea {
+    display: flex;
+    justify-content: center;
+  }
+  
+  .aula-container .box .searchArea .searchAttribute {
+    width: 115px;
+    margin-left: 4px;
+  }
+  
+  .aula-container .box .searchArea .searchText {
+    width: 400px;
+  }

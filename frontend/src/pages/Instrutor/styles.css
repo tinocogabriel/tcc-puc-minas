@@ -1,0 +1,20 @@
+.instrutor-container .box {
+  padding: 12px;
+}
+.instrutor-container .box .searchAreaTitle {
+  text-align: center;
+  font-weight: 400;
+}
+.instrutor-container .box .searchArea {
+  display: flex;
+  justify-content: center;
+}
+
+.instrutor-container .box .searchArea .searchAttribute {
+  width: 115px;
+  margin-left: 4px;
+}
+
+.instrutor-container .box .searchArea .searchText {
+  width: 400px;
+}

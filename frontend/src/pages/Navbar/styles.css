@@ -1,0 +1,12 @@
+.ant-menu-horizontal{
+  line-height: 56px !important;
+}
+.navbarproject .quit {
+  color: red;
+  float: right;
+}
+
+.navbarproject .quit:hover {
+    color: red !important;
+    border: 0 !important;
+}
